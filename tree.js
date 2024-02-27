@@ -1,8 +1,6 @@
-
 let scene, camera, renderer;
 const branchEndpoints = []; // Array to store branch endpoints
-// Using GSAP for animation 
-const animationTween = gsap.to({ growthFactor: 1 }, { duration: 2, ease: 'power2.out' });
+const animationTween = gsap.to({ growthFactor: 1 }, { duration: 5, ease: 'power2.out' });
 
 function init() {
     scene = new THREE.Scene();
@@ -17,20 +15,15 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Draw the hanging line
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 50, 0),
-        new THREE.Vector3(0, 20, 0)
-    ]);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); // White line
-    const line = new THREE.Line(lineGeometry, lineMaterial);
-    scene.add(line);
+    // Draw the sprout
+    const sproutGeometry = new THREE.BoxGeometry(5, 5, 5);
+    const sproutMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const sprout = new THREE.Mesh(sproutGeometry, sproutMaterial);
+    scene.add(sprout);
 
-    // Tree Generation 
-    const branchMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
-    generateBranch(new THREE.Vector3(0, 30, 0), 30, -Math.PI / 2, 4, 0);
+    // Start branch generation from the sprout
+    generateBranch(new THREE.Vector3(0, -2.5, 0), 20, Math.PI / 2, 4);
 }
-
 
 function animate() {
     requestAnimationFrame(animate);
@@ -44,39 +37,34 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-
-const branchMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF, linewidth: 2 });
-
 // Recursive Branch Generation Function
-function generateBranch(startPoint, length, angle, thickness, recursionDepth = 0, growthFactor = 0) {
+function generateBranch(startPoint, length, angle, thickness, recursionDepth = 0) {
     const endPoint = startPoint.clone().add(
         new THREE.Vector3(length * Math.cos(angle), length * Math.sin(angle), 0)
     );
 
     const branchGeometry = new THREE.BufferGeometry().setFromPoints([
         startPoint,
-        endPoint.clone().multiplyScalar(growthFactor) // Apply growthFactor
+        endPoint
     ]);
-    const branchMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF, linewidth: thickness });
+    const branchMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF, linewidth: thickness }); // White line
     const branch = new THREE.Line(branchGeometry, branchMaterial);
     scene.add(branch);
 
-    if (recursionDepth < 4) { // Adjust the limit as needed
-        const angleSpread = Math.PI / 5; // Controls angle variation
+    if (recursionDepth < 6) { // Adjust the limit as needed
+        const angleSpread = Math.PI / 3; // Controls angle variation
+
+        // Generate child branches
         for (let i = 0; i < 2; i++) {
             const branchAngleOffset = angleSpread * (i - 0.5); // Center around main angle
             const newAngle = angle + branchAngleOffset;
             const newLength = length * 0.8 * (0.7 + Math.random() * 0.3); // Length with randomness
             const newThickness = thickness * 0.8;
 
-            generateBranch(endPoint.clone(), newLength, newAngle, newThickness, recursionDepth + 1, growthFactor);
+            generateBranch(endPoint.clone(), newLength, newAngle, newThickness, recursionDepth + 1);
         }
     }
 }
-
-
-
-
 
 init();
 animate();
