@@ -12,7 +12,7 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-function growLine(start, end, seconds) {
+function growLine(start, end, seconds, onComplete) {
     // Scale down the start and end points for easier visualization
     start.divideScalar(10);
     end.divideScalar(10);
@@ -49,6 +49,11 @@ function growLine(start, end, seconds) {
             geometry.attributes.position.needsUpdate = true; // Update positions
             renderer.render(scene, camera); // Assuming you have renderer and camera defined
             requestAnimationFrame(animate); // Request next frame
+        } else {
+            // Animation complete, execute the onComplete callback
+            if (onComplete) {
+                onComplete();
+            }
         }
     }
 
@@ -57,12 +62,33 @@ function growLine(start, end, seconds) {
 }
 
 
+var start = new THREE.Vector3(0, 15, 0);
+var end = new THREE.Vector3(0, 10, 0);
+var seconds = 2;
+growLine(start, end, seconds, function () {
+    // Callback function to be executed after growLine animation completes
+    generate2Branches(end.x, end.y, Math.PI / 4, 3, false);
+});
 
 
+function generate2Branches(x, y, angle, depth, isEndpoint) {
+    // Base case: If depth is 0 or isEndpoint is true, stop recursion
+    if (depth === 0 || isEndpoint) {
+        return;
+    }
 
+    // Calculate endpoints for two branches
+    var branch1End = new THREE.Vector3(x + Math.cos(angle), y + Math.sin(angle), 0);
+    var branch2End = new THREE.Vector3(x + Math.cos(angle + Math.PI / 4), y + Math.sin(angle + Math.PI / 4), 0);
 
-var start = new THREE.Vector3(-4, 7, 0);
-var end = new THREE.Vector3(1, 1, 0);
-var seconds = 1;
-growLine(start, end, seconds);
+    // Draw and animate the lines
+    growLine(new THREE.Vector3(x, y, 0), branch1End, 1);
+    growLine(new THREE.Vector3(x, y, 0), branch2End, 1);
 
+    // Schedule the next generation of branches after the animation finishes
+    setTimeout(function () {
+        // Recursive call for the next generation of branches
+        generate2Branches(branch1End.x, branch1End.y, angle - Math.PI / 8, depth - 1, depth - 1 === 0);
+        generate2Branches(branch2End.x, branch2End.y, angle + Math.PI / 8, depth - 1, depth - 1 === 0);
+    }, 1000); // Adjust the delay as needed
+}
