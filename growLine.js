@@ -65,21 +65,26 @@ function growLine(start, end, seconds, onComplete) {
 var start = new THREE.Vector3(0, 15, 0);
 var end = new THREE.Vector3(0, 10, 0);
 var seconds = 2;
+
 growLine(start, end, seconds, function () {
     // Callback function to be executed after growLine animation completes
-    generate2Branches(end.x, end.y, Math.PI / 4, 3, false);
+    generate2Branches(0, end.y * 10, 3 * Math.PI / 2, 3, false, 5);
 });
 
 
-function generate2Branches(x, y, angle, depth, isEndpoint) {
+
+function generate2Branches(x, y, angle, depth, isEndpoint, length) {
     // Base case: If depth is 0 or isEndpoint is true, stop recursion
     if (depth === 0 || isEndpoint) {
         return;
     }
 
+    // Define the angle between the branches
+    var angleBetweenBranches = Math.PI / 2; // Adjust this angle as desired
+
     // Calculate endpoints for two branches
-    var branch1End = new THREE.Vector3(x + Math.cos(angle), y + Math.sin(angle), 0);
-    var branch2End = new THREE.Vector3(x + Math.cos(angle + Math.PI / 4), y + Math.sin(angle + Math.PI / 4), 0);
+    var branch1End = new THREE.Vector3(x + Math.cos(angle + angleBetweenBranches / 2) * length, y + Math.sin(angle + angleBetweenBranches / 2) * length, 0);
+    var branch2End = new THREE.Vector3(x + Math.cos(angle - angleBetweenBranches / 2) * length, y + Math.sin(angle - angleBetweenBranches / 2) * length, 0);
 
     // Draw and animate the lines
     growLine(new THREE.Vector3(x, y, 0), branch1End, 1);
@@ -88,7 +93,8 @@ function generate2Branches(x, y, angle, depth, isEndpoint) {
     // Schedule the next generation of branches after the animation finishes
     setTimeout(function () {
         // Recursive call for the next generation of branches
-        generate2Branches(branch1End.x, branch1End.y, angle - Math.PI / 8, depth - 1, depth - 1 === 0);
-        generate2Branches(branch2End.x, branch2End.y, angle + Math.PI / 8, depth - 1, depth - 1 === 0);
+        generate2Branches(branch1End.x, branch1End.y, angle - Math.PI / 8, depth - 1, depth - 1 === 0, length);
+        generate2Branches(branch2End.x, branch2End.y, angle + Math.PI / 8, depth - 1, depth - 1 === 0, length);
     }, 1000); // Adjust the delay as needed
 }
+
