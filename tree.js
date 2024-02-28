@@ -1,70 +1,63 @@
-let scene, camera, renderer;
-const branchEndpoints = []; // Array to store branch endpoints
-const animationTween = gsap.to({ growthFactor: 1 }, { duration: 5, ease: 'power2.out' });
 
-function init() {
-    scene = new THREE.Scene();
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    scene.add(directionalLight);
+// Scene
+const scene = new THREE.Scene();
 
-    const aspectRatio = window.innerWidth / window.innerHeight;
-    camera = new THREE.OrthographicCamera(-50 * aspectRatio, 50 * aspectRatio, 50, -50, 1, 1000);
-    camera.position.z = 100;
+// Camera 
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 2;           // Look from slightly in front
+camera.lookAt(0, 0, 0);          // Target the center of the scene
 
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+// Renderer
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-    // Draw the sprout
-    const sproutGeometry = new THREE.BoxGeometry(5, 5, 5);
-    const sproutMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const sprout = new THREE.Mesh(sproutGeometry, sproutMaterial);
-    scene.add(sprout);
+function growLine(start, end, seconds) {
+    // Create a geometry for the line
+    var geometry = new THREE.BufferGeometry();
+    var positions = new Float32Array(2 * 3); // Two points with three coordinates each (x, y, z)
+    geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    // Start branch generation from the sprout
-    generateBranch(new THREE.Vector3(0, -2.5, 0), 20, Math.PI / 2, 4);
-}
+    // Set initial positions
+    geometry.attributes.position.setXYZ(0, start.x, start.y, start.z);
+    geometry.attributes.position.setXYZ(1, start.x, start.y, start.z);
 
-function animate() {
-    requestAnimationFrame(animate);
+    // Create material for the line
+    var material = new THREE.LineBasicMaterial({ color: 0xffffff });
 
-    if (animationTween.isActive()) {
-        scene.traverse(object => {
-            if (object.isLine) object.geometry.needsUpdate = true;
-        });
-    }
+    // Create the line object
+    var line = new THREE.Line(geometry, material);
+    scene.add(line); // Assuming you have a scene variable defined
 
-    renderer.render(scene, camera);
-}
+    // Calculate the vector for the line
+    var vector = new THREE.Vector3().subVectors(end, start);
 
-// Recursive Branch Generation Function
-function generateBranch(startPoint, length, angle, thickness, recursionDepth = 0) {
-    const endPoint = startPoint.clone().add(
-        new THREE.Vector3(length * Math.cos(angle), length * Math.sin(angle), 0)
-    );
+    // Variable to keep track of elapsed time
+    var elapsedTime = 0;
 
-    const branchGeometry = new THREE.BufferGeometry().setFromPoints([
-        startPoint,
-        endPoint
-    ]);
-    const branchMaterial = new THREE.LineBasicMaterial({ color: 0xFFFFFF, linewidth: thickness }); // White line
-    const branch = new THREE.Line(branchGeometry, branchMaterial);
-    scene.add(branch);
-
-    if (recursionDepth < 6) { // Adjust the limit as needed
-        const angleSpread = Math.PI / 3; // Controls angle variation
-
-        // Generate child branches
-        for (let i = 0; i < 2; i++) {
-            const branchAngleOffset = angleSpread * (i - 0.5); // Center around main angle
-            const newAngle = angle + branchAngleOffset;
-            const newLength = length * 0.8 * (0.7 + Math.random() * 0.3); // Length with randomness
-            const newThickness = thickness * 0.8;
-
-            generateBranch(endPoint.clone(), newLength, newAngle, newThickness, recursionDepth + 1);
+    // Define animation function
+    function animate() {
+        if (elapsedTime < seconds) {
+            elapsedTime += 1 / 60; // Assuming 60fps
+            var t = elapsedTime / seconds; // Calculate the interpolation factor
+            var interpolatedPosition = new THREE.Vector3().lerpVectors(start, end, t); // Interpolate position
+            geometry.attributes.position.setXYZ(1, interpolatedPosition.x, interpolatedPosition.y, interpolatedPosition.z); // Move end point
+            geometry.attributes.position.needsUpdate = true; // Update positions
+            renderer.render(scene, camera); // Assuming you have renderer and camera defined
+            requestAnimationFrame(animate); // Request next frame
         }
     }
+
+    // Start the animation
+    animate();
 }
 
-init();
-animate();
+
+
+
+
+var start = new THREE.Vector3(0, 0, 0);
+var end = new THREE.Vector3(1, 1, 0);
+var seconds = 1;
+growLine(start, end, seconds);
+
