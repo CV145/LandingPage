@@ -33,7 +33,7 @@ function growLine(start, end, seconds, onComplete) {
     var line = new THREE.Line(geometry, material);
     scene.add(line); // Assuming you have a scene variable defined
 
-    material.linewidth = 8;
+    material.linewidth = 18;
 
     // Calculate the vector for the line
     var vector = new THREE.Vector3().subVectors(end, start);
@@ -64,13 +64,13 @@ function growLine(start, end, seconds, onComplete) {
 }
 
 
-var start = new THREE.Vector3(0, 15, 0);
-var end = new THREE.Vector3(0, 13, 0);
+var start = new THREE.Vector3(0, -15, 0);
+var end = new THREE.Vector3(0, -10, 0);
 var seconds = 1;
 
 growLine(start, end, seconds, function () {
     // Callback function to be executed after growLine animation completes
-    generate2Branches(0, end.y * 10, 3 * Math.PI / 2, 3, false, 5);
+    generate2Branches(0, -10, Math.PI / 2, 3, false, 5, 3);
     //buildTree(scene, 0, 10, 10, 0.5, 3, Math.PI / 4, 0.7, 3);
 });
 
@@ -103,18 +103,20 @@ function buildTree(scene, x, y, trunkLength, trunkThickness, numBranches, branch
 }
 
 
-function generate2Branches(x, y, angle, depth, isEndpoint, length) {
+function generate2Branches(x, y, angle, depth, isEndpoint, length, minBranchDistance) {
     // Base case: If depth is 0 or isEndpoint is true, stop recursion
     if (depth === 0 || isEndpoint) {
         return;
     }
 
     // Define the angle between the branches with slight variation
-    var angleVariation = (Math.random() - 0.5) * Math.PI / 6; // Angle variation range [-PI/12, PI/12]
+    //var angleVariation = (Math.random() - 0.5) * Math.PI / 6; // Angle variation range [-PI/12, PI/12]
+    var angleVariation = 0;
     var angleBetweenBranches = Math.PI / 2 + angleVariation;
 
     // Calculate slight variations in branch lengths
-    var lengthVariation = length * 0.5; // 50% variation
+    //var lengthVariation = length * 0.5; // 50% variation
+    var lengthVariation = 0;
     var branchLength1 = length + (Math.random() - 0.5) * lengthVariation;
     var branchLength2 = length + (Math.random() - 0.5) * lengthVariation;
 
@@ -122,17 +124,34 @@ function generate2Branches(x, y, angle, depth, isEndpoint, length) {
     var branch1End = new THREE.Vector3(x + Math.cos(angle + angleBetweenBranches / 2) * branchLength1, y + Math.sin(angle + angleBetweenBranches / 2) * branchLength1, 0);
     var branch2End = new THREE.Vector3(x + Math.cos(angle - angleBetweenBranches / 2) * branchLength2, y + Math.sin(angle - angleBetweenBranches / 2) * branchLength2, 0);
 
-    // Draw and animate the lines
-    growLine(new THREE.Vector3(x, y, 0), branch1End, 1);
-    growLine(new THREE.Vector3(x, y, 0), branch2End, 1);
+    // Calculate distance between branch endpoints
+    var distanceBetweenBranches = branch1End.distanceTo(branch2End);
+
+    // Check if branches overlap
+    if (distanceBetweenBranches < minBranchDistance) {
+        // Adjust branch endpoints to ensure minimum distance
+        var midPoint = branch1End.clone().lerp(branch2End, 0.5); // Midpoint between branch endpoints
+        var directionVector = new THREE.Vector3().subVectors(branch2End, branch1End).normalize(); // Vector from branch1End to branch2End
+        var adjustedBranchLength = minBranchDistance / 2; // Adjusted branch length to maintain minimum distance
+        branch1End.copy(midPoint).sub(directionVector.clone().multiplyScalar(adjustedBranchLength));
+        branch2End.copy(midPoint).add(directionVector.clone().multiplyScalar(adjustedBranchLength));
+    }
+
+    // Draw and animate the lines if there's no overlap
+    if (distanceBetweenBranches >= minBranchDistance) {
+        growLine(new THREE.Vector3(x, y, 0), branch1End, 1);
+        growLine(new THREE.Vector3(x, y, 0), branch2End, 1);
+    }
 
     // Schedule the next generation of branches after the animation finishes
     setTimeout(function () {
         // Recursive call for the next generation of branches
-        generate2Branches(branch1End.x * 10, branch1End.y * 10, angle + angleVariation, depth - 1, depth - 1 === 0, length);
-        generate2Branches(branch2End.x * 10, branch2End.y * 10, angle - angleVariation, depth - 1, depth - 1 === 0, length);
+        generate2Branches(branch1End.x * 10, branch1End.y * 10, angle + angleVariation, depth - 1, depth - 1 === 0, length, minBranchDistance);
+        generate2Branches(branch2End.x * 10, branch2End.y * 10, angle - angleVariation, depth - 1, depth - 1 === 0, length, minBranchDistance);
     }, 1000); // Adjust the delay as needed
 }
+
+
 
 
 
