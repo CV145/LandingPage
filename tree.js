@@ -20,7 +20,7 @@ function createBranch(startX, startY, length, angle) {
         new THREE.Vector3(endX, endY, 0),
         1, // Animation duration in seconds
         function () { // onComplete for sequential growth
-            if (length > 10 && elapsedTime() < 5) { // Modify condition
+            if (elapsedTime() < 3) { // Modify condition
                 createBranch(endX, endY, length * 0.7, angle + Math.PI / 5);
                 createBranch(endX, endY, length * 0.7, angle - Math.PI / 5);
             }
@@ -37,7 +37,7 @@ function elapsedTime() {
 // Initial call - ensure startTime is reset
 startTime = null;
 createBranch(0, -300, 200, Math.PI / 2);
-growCircle(0, 0, 30, 1.5); // Create a circle at (5, 10) with a radius of 3, growing over 1.5 seconds
+growCircle(0, 26, 30, 1.5, 3);
 
 camera.position.z = 50; // Position camera to view the tree
 
@@ -48,25 +48,22 @@ function animate() {
 animate();
 
 
-function growCircle(x, y, radius, duration) {
-    const geometry = new THREE.CircleGeometry(0.1, 32); // Start with radius 0
+function growCircle(x, y, radius, duration, delay) {
+    const geometry = new THREE.CircleGeometry(0.1, 32); // Start with the desired radius
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const circleMesh = new THREE.Mesh(geometry, material);
     circleMesh.position.set(x, y, 0);
     scene.add(circleMesh);
 
-    let startTime = Date.now();
-    let initialRadius = 0;
-    console.log(x);
-    console.log(y);
+    let startTime = null;
+    let initialRadius = 0; // Set initial radius to 0
 
     function update() {
         const elapsedTime = (Date.now() - startTime) / 1000;
-        let t = elapsedTime / duration;
-        t = Math.min(t, 1); // Ensure t is between 0 and 1
+        let t = (elapsedTime - delay) / duration; // Subtract delay from elapsedTime
+        t = Math.max(t, 0); // Ensure t is at least 0
 
         const currentRadius = initialRadius + t * (radius - initialRadius);
-        console.log(currentRadius);
         circleMesh.scale.set(currentRadius, currentRadius, 1);
 
         if (t < 1) {
@@ -74,7 +71,10 @@ function growCircle(x, y, radius, duration) {
         }
     }
 
-    update(); // Start the animation
+    setTimeout(() => {
+        startTime = Date.now(); // Start the animation after the delay
+        update();
+    }, delay);
 }
 
 
