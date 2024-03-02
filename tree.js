@@ -38,6 +38,16 @@ function elapsedTime() {
 startTime = null;
 createBranch(0, -300, 200, Math.PI / 2);
 growCircle(0, 26, 30, 1.5, 3);
+growCircle(-22, 20, 30, 1.5, 3);
+growCircle(20, 26, 30, 1.5, 3);
+growCircle(-20, 13, 30, 1.5, 3);
+growCircle(5, 17, 30, 1.5, 3);
+growCircle(28, 0, 30, 1.5, 3);
+growCircle(28, 6, 30, 1.5, 3);
+growCircle(30, 14, 30, 1.5, 3);
+growCircle(-31, 12, 30, 1.5, 3);
+growCircle(-30, -7, 30, 1.5, 3);
+growCircle(30, -7, 30, 1.5, 3);
 
 camera.position.z = 50; // Position camera to view the tree
 
