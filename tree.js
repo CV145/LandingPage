@@ -4,6 +4,8 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
 function createBranch(startX, startY, length, angle) {
     const geometry = new THREE.BufferGeometry();
@@ -65,6 +67,18 @@ function growCircle(x, y, radius, duration, delay) {
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const circleMesh = new THREE.Mesh(geometry, material);
     circleMesh.position.set(x, y, 0);
+
+    const hoverExpansion = 2; // How much to expand on hover
+
+    circleMesh.addEventListener('mouseover', () => {
+        circleMesh.scale.multiplyScalar(hoverExpansion);
+    });
+    circleMesh.addEventListener('mouseout', () => {
+        circleMesh.scale.divideScalar(hoverExpansion);
+    });
+
+    circleMesh.isCircle = true;
+
     scene.add(circleMesh);
 
     let startTime = null;
@@ -88,6 +102,7 @@ function growCircle(x, y, radius, duration, delay) {
         update();
     }, delay);
 }
+
 
 
 
@@ -142,3 +157,30 @@ function growLine(start, end, seconds, onComplete) {
     // Start the animation
     animate();
 }
+
+function onMouseMove(event) {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(scene.children);
+
+    // Filter for circles only (assuming circles have a 'isCircle' property):
+    const circleIntersects = intersects.filter(obj => obj.object.isCircle);
+
+    if (circleIntersects.length > 0) {
+        const hoveredCircle = circleIntersects[0].object;
+        hoveredCircle.scale.multiplyScalar(hoverExpansion);
+        renderer.render(scene, camera); // Manually update the scene
+    } else {
+        // Reset scales of all circles (avoid multiple circles staying expanded)
+        scene.children.forEach(obj => {
+            if (obj.isCircle) {
+                obj.scale.divideScalar(hoverExpansion);
+                renderer.render(scene, camera);
+            }
+        });
+    }
+}
+window.addEventListener('mousemove', onMouseMove);
