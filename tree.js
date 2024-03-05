@@ -22,7 +22,7 @@ function createBranch(startX, startY, length, angle) {
         new THREE.Vector3(endX, endY, 0),
         1, // Animation duration in seconds
         function () { // onComplete for sequential growth
-            if (elapsedTime() < 3) { // Modify condition
+            if (elapsedTime() < 5) { // Modify condition
                 createBranch(endX, endY, length * 0.7, angle + Math.PI / 5);
                 createBranch(endX, endY, length * 0.7, angle - Math.PI / 5);
             }
@@ -39,19 +39,18 @@ function elapsedTime() {
 // Initial call - ensure startTime is reset
 startTime = null;
 createBranch(0, -300, 200, Math.PI / 2);
-growCircle(0, 26, 30, 1.5, 3);
-growCircle(-22, 20, 30, 1.5, 3);
-growCircle(-31, 12, 30, 1.5, 3);
-growCircle(-30, -7, 30, 1.5, 3);
-growCircle(-20, 13, 30, 1.5, 3);
-growCircle(-5, 17, 30, 1.5, 3);
-
-growCircle(20, 13, 30, 1.5, 3);
-growCircle(30, -7, 30, 1.5, 3);
-growCircle(31, 12, 30, 1.5, 3);
-growCircle(22, 20, 30, 1.5, 3);
-growCircle(30, -7, 30, 1.5, 3);
-growCircle(5, 17, 30, 1.5, 3);
+growCircle(0, 26, 30, 1.5, 5);
+growCircle(-22, 20, 30, 1.5, 5);
+growCircle(-31, 12, 30, 1.5, 5);
+growCircle(-30, -7, 30, 1.5, 5);
+growCircle(-20, 13, 30, 1.5, 5);
+growCircle(-5, 17, 30, 1.5, 5);
+growCircle(20, 13, 30, 1.5, 5);
+growCircle(30, -7, 30, 1.5, 5);
+growCircle(31, 12, 30, 1.5, 5);
+growCircle(22, 20, 30, 1.5, 5);
+growCircle(30, -7, 30, 1.5, 5);
+growCircle(5, 17, 30, 1.5, 5);
 
 camera.position.z = 50; // Position camera to view the tree
 
@@ -104,7 +103,9 @@ function growCircle(x, y, radius, duration, delay) {
 }
 
 
-
+/*
+Issue - Animation is tied to system frame rate
+*/
 
 
 function growLine(start, end, seconds, onComplete) {
@@ -126,25 +127,28 @@ function growLine(start, end, seconds, onComplete) {
 
     // Create the line object
     var line = new THREE.Line(geometry, material);
-    scene.add(line); // Assuming you have a scene variable defined
+    scene.add(line);
 
     material.linewidth = 18;
 
     // Calculate the vector for the line
     var vector = new THREE.Vector3().subVectors(end, start);
 
-    // Variable to keep track of elapsed time
-    var elapsedTime = 0;
+    // Variable to keep track of start time
+    var startTime = performance.now();
 
     // Define animation function
-    function animate() {
+    function animate(currentTime) {
+        // Calculate elapsed time
+        var elapsedTime = (currentTime - startTime) / 1000; // Convert to seconds
+
         if (elapsedTime < seconds) {
-            elapsedTime += 1 / 60; // Assuming 60fps
             var t = elapsedTime / seconds; // Calculate the interpolation factor
             var interpolatedPosition = new THREE.Vector3().lerpVectors(start, end, t); // Interpolate position
             geometry.attributes.position.setXYZ(1, interpolatedPosition.x, interpolatedPosition.y, interpolatedPosition.z); // Move end point
             geometry.attributes.position.needsUpdate = true; // Update positions
             renderer.render(scene, camera); // Assuming you have renderer and camera defined
+
             requestAnimationFrame(animate); // Request next frame
         } else {
             // Animation complete, execute the onComplete callback
@@ -155,7 +159,7 @@ function growLine(start, end, seconds, onComplete) {
     }
 
     // Start the animation
-    animate();
+    requestAnimationFrame(animate);
 }
 
 function onMouseMove(event) {
