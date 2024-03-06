@@ -7,7 +7,32 @@ document.body.appendChild(renderer.domElement);
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+scene.scale.set(calculateScaleFactor(), calculateScaleFactor(), 1);
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Apply scaling
+    scene.scale.set(calculateScaleFactor(), calculateScaleFactor(), 1);
+}
+
+window.addEventListener('resize', onWindowResize);
+
+
+
+function calculateScaleFactor() {
+    const aspect = window.innerWidth / window.innerHeight;
+    const minDimension = Math.min(window.innerWidth, window.innerHeight); // Use the smaller dimension
+    const scaleFactor = minDimension / 800;  // Adjust the divisor (600) as needed
+    return scaleFactor;
+}
+
+
+
 function createBranch(startX, startY, length, angle) {
+
     const geometry = new THREE.BufferGeometry();
     const endX = startX + length * Math.cos(angle);
     const endY = startY + length * Math.sin(angle);
@@ -22,7 +47,7 @@ function createBranch(startX, startY, length, angle) {
         new THREE.Vector3(endX, endY, 0),
         1, // Animation duration in seconds
         function () { // onComplete for sequential growth
-            if (elapsedTime() < 5) { // Modify condition
+            if (elapsedTime() < 6) { // Modify condition
                 createBranch(endX, endY, length * 0.7, angle + Math.PI / 5);
                 createBranch(endX, endY, length * 0.7, angle - Math.PI / 5);
             }
