@@ -6,6 +6,8 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+renderer.setClearColor(0x3b2b27); // Example: A shade of orange
+
 
 scene.scale.set(calculateScaleFactor(), calculateScaleFactor(), 1);
 
