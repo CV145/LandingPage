@@ -39,7 +39,14 @@ function createBranch(startX, startY, length, angle) {
     const positions = new Float32Array([startX, startY, 0, startX, startY + 0.01 * length, 0]);
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const dpr = window.devicePixelRatio || 1; // Get the DPR
+    const desiredLineWidth = 2; // Your desired line width in CSS pixels
+    const actualLineWidth = desiredLineWidth * dpr;
+
+    var material = new THREE.LineBasicMaterial({
+        color: 0xffffff,
+        linewidth: actualLineWidth
+    });
     const branch = new THREE.Line(geometry, material);
     scene.add(branch);
 
